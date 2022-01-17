@@ -1,7 +1,9 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterbestplace/constants.dart';
+import 'package:flutterbestplace/models/marker.dart';
 //google maps :
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 //geolocator :
@@ -20,7 +22,20 @@ class getAllMarkersState extends State<AllMarkers> {
   CameraPosition _kGooglePlex;
   Position cp;
   Set<Marker> markers = {};
+  GoogleMapController myController;
+  MarkerController controllerMarkere = MarkerController();
 
+  populateClients() {
+    var clients = [];
+    FirebaseFirestore.instance.collection('marker').get().then((docs) {
+      if (docs.docs.isNotEmpty) {
+        for (int i = 0; i < docs.docs.length; ++i) {
+          clients.add(docs.docs[i].data);
+          //initMarker(docs.docs[i].data,docs.docs[i].id);
+        }
+      }
+    });
+  }
 //geolocator : funnction permission
   Future getPer() async {
     bool services;
@@ -44,44 +59,68 @@ class getAllMarkersState extends State<AllMarkers> {
     cp = await Geolocator.getCurrentPosition().then((value) => value);
     _kGooglePlex = CameraPosition(
       target: LatLng(cp.latitude, cp.longitude),
-      zoom: 14.4746,
+      zoom: 6,
     );
+
     markers.add(Marker(
-        markerId: MarkerId("1"), position: LatLng(cp.latitude, cp.longitude)));
-    setState(() {});
+        markerId: MarkerId("2"),icon:BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed), position: LatLng(cp.latitude, cp.longitude)));
   }
 
-  _getAllMarker() async {
-    List<dynamic> liste = await controllerMarker.MarkerAll();
-    markers.forEach((marker){
-     /* markers.add(Marker(
-          markerId: MarkerId(liste[i]['_id']),
+  getAllMarker() async {
+    List<MarkerS> listeMarker = await controllerMarker.MarkerAll();
+    listeMarker.forEach((marker) {
+      print("*******************MarkerLIste**************************");
+      print(marker.toJson());
+      var i=1;
+      markers.add(Marker(
+          markerId: MarkerId("$i"),
           icon:
           BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
-          position: LatLng(liste[i]['latitude'], liste[i]['longitude'])));*/
-      print("******************** ${marker} *************************");
+          position: LatLng(marker.latitude, marker.longitude)));
+      print(markers);
+      i++;
     });
-    print(liste);
-    /*for (var i = 0; i < liste.length; i++) {
-      markers.add(Marker(
-          markerId: MarkerId(liste[i]['_id']),
-          icon:
-              BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
-          position: LatLng(liste[i]['latitude'], liste[i]['longitude'])));
-    }*/
   }
+
+
+  /*markers = {
+  Marker(
+  markerId: MarkerId("1"),
+  draggable: true,
+  onDragEnd: (LatLng t) {
+  print("Drag end :");
+  print('${t.latitude}');
+  print('${t.longitude}');
+  },
+  infoWindow: InfoWindow(
+  title: ("place en mahdia 1"),
+  onTap: () {
+  print('marq 1 : place en mahdia 1');
+  }),
+  position: LatLng(35.51287634344423, 11.038556308246598)),
+  Marker(
+        markerId: MarkerId("2"),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        infoWindow: InfoWindow(
+            title: ("place en mahdia 2"),
+            onTap: () {
+              print('marq 2 : place en mahdia 2');
+            }),
+        position: LatLng(35.5049812224652, 11.043470115161881)),
+  };*/
 
   @override
   void initState() {
     getPer();
     getLateAndLate();
-    _getAllMarker();
+    getAllMarker();
     super.initState();
+
   }
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
+    return new  Scaffold(
       body: Column(
         children: [
           _kGooglePlex == null
@@ -98,25 +137,13 @@ class getAllMarkersState extends State<AllMarkers> {
                     onMapCreated: (controller) {
                       _controller.complete(controller);
                     },
+                    polylines: {
+                      Polyline(polylineId: const PolylineId("over"), color: Colors.red,width: 5)
+                    },
                   ),
-                  height: 500,
+                  height: 746,
                 ),
-          ElevatedButton(
-            child: Text(
-              "button",
-              style: TextStyle(color: Colors.white),
-            ),
-            onPressed: () async {
-              controllerMarker.MarkerById('61ad2d0ca7f7450023e9e2b0');
-            },
-            style: ElevatedButton.styleFrom(
-                primary: kPrimaryColor,
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
-                textStyle: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w100)),
-          ),
+
         ],
       ),
     );

@@ -6,6 +6,8 @@ import 'package:flutterbestplace/components/Dropdown_widget.dart';
 import 'package:get/get.dart';
 
 import '../Controllers/auth_service.dart';
+import '../components/rounded_button.dart';
+import '../constants.dart';
 import 'Signup/components/body.dart';
 
 class CreateAccount extends StatefulWidget {
@@ -19,7 +21,7 @@ class _CreateAccountState extends State<CreateAccount> {
   String username="" ;
   AuthService _controller = Get.put(AuthService());
 
-  var role;
+  var role='User';
   submit() async{
     final form=_formKey.currentState;
 
@@ -27,7 +29,7 @@ class _CreateAccountState extends State<CreateAccount> {
       form.save();
       SnackBar snackbar = SnackBar(content: Text("Welcome $username!"));
       _scaffoldkey.currentState.showSnackBar(snackbar);
-      Timer(Duration(seconds: 2),(){
+      Timer(Duration(seconds: 20),(){
         Navigator.pop(context,username);
       });
       await _controller.updateRole(_controller.idController,role);
@@ -38,7 +40,6 @@ class _CreateAccountState extends State<CreateAccount> {
   Widget build(BuildContext parentContext) {
     return Scaffold(
       key: _scaffoldkey,
-      appBar: header(context,titleText: "Set up your profile",removeBackButton: true),
       body:ListView(
         children:<Widget> [
           Container(
@@ -71,24 +72,19 @@ class _CreateAccountState extends State<CreateAccount> {
                   )
                 ),
               ),
-              GestureDetector(
-                onTap:  submit,
-                child: Container(
-                  height:50.0,
-                  width: 350.0,
-                  decoration: BoxDecoration(
-                    color: Colors.blue,
-                    borderRadius: BorderRadius.circular(7.0),
-                  ),
-                child:Center( child: Text(
-                  "Submit",
-                  style:TextStyle(
-                    color: Colors.white,
-                    fontSize: 15.0,
-                    fontWeight: FontWeight.bold
-                  )
-                )),),
-              ),
+    RoundedButton(
+    text: "SIGNUP",
+    press: () async {
+    var fromdata = _formKey.currentState;
+    if (fromdata.validate()) {
+    fromdata.save();
+ await _controller.updateRole(_controller.idController,role);}
+    if(role=='User'){
+      Get.toNamed('/home');
+    }else if (role=='Place'){
+      Get.toNamed('/position');
+    }
+    })
             ],),
           )
 

@@ -5,10 +5,12 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterbestplace/Controllers/auth_service.dart';
 import 'package:flutterbestplace/Screens/Accueil/accueil.dart';
+import 'package:flutterbestplace/Screens/Profil_User/body.dart';
 import 'package:flutterbestplace/Screens/Profil_User/profil_screen.dart';
 import 'package:flutterbestplace/Screens/Profil_Place/profil_place.dart';
 
 import 'package:flutterbestplace/Screens/Welcome/welcome_screen.dart';
+import 'package:flutterbestplace/Screens/google_map/all_Markers.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutterbestplace/models/user.dart';
@@ -16,6 +18,8 @@ import 'package:flutterbestplace/Screens/search.dart';
 import 'package:flutterbestplace/Screens/timeline.dart';
 import 'package:flutterbestplace/Screens/upload.dart';
 
+import 'AllMaps/mapspage.dart';
+import 'Profil_Place/body.dart';
 import 'Profil_Place/profil_place.dart';
 import 'create_account.dart';
 
@@ -78,17 +82,17 @@ class _HomeState extends State<Home> {
     return Scaffold(
       body: PageView(
         children: [
-          //Timeline(),
-          RaisedButton(
-            child: Text("logout"),
-            onPressed:  ()async {
-              await AuthService().signOut();}
-          ),
-          CreateAccount(),
+          _controller.user.role==null ?
+          CreateAccount():Timeline(currentUser: _controller.user),
+          AllMarkers(),
           Upload(currentUser:_controller.user),
           Search(),
           _controller.user.role=="Place"?ProfilPlace(profileId:_controller.user.id):ProfilUser(profileId:_controller.user.id),
-
+          RaisedButton(
+              child: Text("logout"),
+              onPressed:  ()async {
+                await AuthService().signOut();}
+          ),
         ],
         controller: pageController,
         onPageChanged: onPageChanged,
@@ -103,7 +107,7 @@ class _HomeState extends State<Home> {
             icon: Icon(Icons.whatshot),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_active),
+            icon: Icon(Icons.pin_drop_outlined),
           ),
           BottomNavigationBarItem(
             icon: Icon(
@@ -117,6 +121,9 @@ class _HomeState extends State<Home> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.logout),
           ),
         ],
       ),

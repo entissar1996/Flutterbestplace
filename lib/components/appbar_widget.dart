@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutterbestplace/constants.dart';
+import 'package:get/get.dart';
 
 AppBar buildAppBar(BuildContext context) {
   final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -7,12 +9,15 @@ AppBar buildAppBar(BuildContext context) {
 
   return AppBar(
     leading: BackButton(),
-    backgroundColor: Colors.transparent,
+    backgroundColor: kPrimaryColor,
     elevation: 0,
     actions: [
       IconButton(
         icon: Icon(icon),
-        onPressed: () {},
+        onPressed: () {
+          Get.toNamed('/chat');
+
+        },
       ),
     ],
   );

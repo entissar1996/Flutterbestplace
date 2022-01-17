@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterbestplace/Controllers/auth_service.dart';
 import 'package:flutterbestplace/Screens/Welcome/welcome_screen.dart';
+import 'package:flutterbestplace/Screens/create_account.dart';
 import 'package:flutterbestplace/constants.dart';
 import 'package:flutterbestplace/Screens/Signup/signup_screen.dart';
 import 'package:flutterbestplace/Screens/Signup/contactplace.dart';
@@ -16,7 +17,10 @@ import 'package:flutterbestplace/Screens/google_map/add_Marker.dart';
 import 'package:flutterbestplace/Screens/google_map/all_Markers.dart';
 import 'package:get/get.dart';
 
+import 'Screens/Profil_Place/body.dart';
+import 'Screens/Profil_User/body.dart';
 import 'Screens/home.dart';
+import 'Users/listuserchat.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +56,9 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/editprofil', page: () => EditProfil()),
         GetPage(name: '/profilPlace', page: () => ProfilPlace()),
         GetPage(name: '/getmaps', page: () => AllMarkers()),
+        GetPage(name: '/updaterole', page: () => CreateAccount()),
+        GetPage(name: '/chat', page: () => Listuserchat()),
+
         GetPage(name: '/home', page: () => Home()),
 
       ],

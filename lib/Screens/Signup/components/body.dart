@@ -175,20 +175,20 @@ class Body extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  SocalIcon(
+                 /* SocalIcon(
                     iconSrc: "assets/icons/facebook.svg",
                     press: () {},
                   ),
                   SocalIcon(
                     iconSrc: "assets/icons/twitter.svg",
                     press: () {},
-                  ),
+                  ),*/
                   SocalIcon(
                     iconSrc: "assets/icons/google-plus.svg",
                     press: () async {
                       await _controller.linkGoogleAndTwitter();
-                      _controller.userController.value.role="User";
-                      Get.toNamed('/home');
+                     // _controller.userController.value.role="User";
+                     // Get.toNamed('/home');
 
                     },
                   ),

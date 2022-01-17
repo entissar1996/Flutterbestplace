@@ -1,16 +1,19 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutterbestplace/models/user.dart';
+import 'package:get/get.dart';
+
+import '../Screens/home.dart';
+import '../models/message.dart';
+import 'auth_service.dart';
 
 class DBService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  AuthService _controller = Get.put(AuthService());
+  final MessageRef = FirebaseFirestore.instance.collection("messages");
 
   Future<dynamic> createNewUser(CUser user) async {
-
     try {
-      await _firestore.collection("user").doc(user.id).set(
-        user.toJson()
-      );
+      await _firestore.collection("user").doc(user.id).set(user.toJson());
 
       return true;
     } catch (e) {
@@ -19,64 +22,48 @@ class DBService {
   }
 
   Future<CUser> getUser(String uid) async {
-     try {
-     final usersRef = await FirebaseFirestore.instance.collection('user').withConverter<CUser>(
-       fromFirestore: (snapshot, _) => CUser.fromJson(snapshot.data()),
-       toFirestore: (user, _) => user.toJson(),
-     );
-     CUser userdata = await usersRef.doc(uid).get().then((snapshot) => snapshot.data());
-print("***********User**************");
-print(userdata.toJson());
-     return userdata;
-   } catch (e) {
-      print("FAILED GET USER") ;
-  }
-   }
-
-/* Future<void> addTodo(String content, String uid) async {
     try {
-      await _firestore
-          .collection("users")
-          .doc(uid)
-          .collection("todos")
-          .add({
-        'dateCreated': Timestamp.now(),
-        'content': content,
-        'done': false,
-      });
+      final usersRef = await FirebaseFirestore.instance
+          .collection('user')
+          .withConverter<CUser>(
+            fromFirestore: (snapshot, _) => CUser.fromJson(snapshot.data()),
+            toFirestore: (user, _) => user.toJson(),
+          );
+      CUser userdata =
+          await usersRef.doc(uid).get().then((snapshot) => snapshot.data());
+      print("***********User**************");
+      print(userdata.toJson());
+      return userdata;
     } catch (e) {
-      print(e);
-      rethrow;
+      print("FAILED GET USER");
     }
   }
 
-  Stream<List<TodoModel>> todoStream(String uid) {
-    return _firestore
-        .collection("users")
-        .document(uid)
-        .collection("todos")
-        .orderBy("dateCreated", descending: true)
+  Stream<List<CUser>> get getDiscussionUser {
+    return usersRef
+        .where('id', isNotEqualTo: _controller.idController)
         .snapshots()
-        .map((QuerySnapshot query) {
-      List<TodoModel> retVal = List();
-      query.documents.forEach((element) {
-        retVal.add(TodoModel.fromDocumentSnapshot(element));
-      });
-      return retVal;
-    });
+        .map((event) =>
+            event.docs.map((e) => CUser.fromJson(e.data())).toList());
   }
 
-  Future<void> updateTodo(bool newValue, String uid, String todoId) async {
+  Stream<List<Message>> getMessage(String receiverUid,
+      [bool myMessage = true]) {
+    return MessageRef.where('senderUid',
+            isEqualTo: myMessage ? _controller.idController : receiverUid)
+        .where('receiverUid',
+            isEqualTo: myMessage ? receiverUid : _controller.idController)
+        .snapshots()
+        .map((event) =>
+            event.docs.map((e) => Message.fromJson(e.data())).toList());
+  }
+  Future<bool> sendMessage(Message msg) async {
     try {
-      _firestore
-          .collection("users")
-          .doc(uid)
-          .collection("todos")
-          .doc(todoId)
-          .update({"done": newValue});
-    } catch (e) {
-      print(e);
-      rethrow;
+      await MessageRef.doc().set(msg.toJson());
+      return true;
     }
-  }*/
+    catch (e) {
+      return false;
+    }
+  }
 }

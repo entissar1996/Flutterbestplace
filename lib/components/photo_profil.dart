@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutterbestplace/constants.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:get/get.dart';
 
 class PhotoProfile extends StatelessWidget {
   final String imagePath;
@@ -34,41 +34,50 @@ class PhotoProfile extends StatelessWidget {
   }
 
   Widget buildImage() {
-
+    final image = NetworkImage(imagePath);
 
     return ClipOval(
       child: Material(
         color: Colors.transparent,
         child: Ink.image(
-          image:  imagePath ==null ? AssetImage("assets/images/profil_defaut.jpg"):CachedNetworkImageProvider(imagePath) ,
+          image: image,
           fit: BoxFit.cover,
           width: 128,
           height: 128,
-          //child: InkWell(onTap: onClicked),
+         // child: InkWell(onTap: onClicked),
         ),
       ),
     );
   }
 
+  /*Widget buildEditIcon(Color color) => buildCircle(
+    color: Colors.white,
+    all: 3,
+    child: buildCircle(
+      color: color,
+      all: 8,
+      child: Icon(
+        isEdit ? Icons.add_a_photo : Icons.edit,
+        color: Colors.white,
+        size: 20,
+      ),
+    ),
+  );
+*/
   Widget buildEditIcon(Color color) => buildCircle(
     color: Colors.white,
     all: 3,
     child: buildCircle(
-        color: color,
-        all: 8,
-        child:
-        IconButton(
-          onPressed: onClicked,
-          icon: Icon( isEdit ? Icons.add_a_photo : Icons.edit,
-              color: Colors.white,
-              size: 20),
-        )
-      /* IconButton(
-            isEdit ? Icons.add_a_photo : Icons.edit,
-            color: Colors.white,
-            size: 20,
-            onPressed: ,
-          ),*/
+      color: color,
+      all: 3,
+      child: IconButton(
+        onPressed:(){Get.toNamed('/editprofil');} ,
+        icon: Icon(
+          Icons.edit,
+          color: Colors.white,
+          size: 20,
+        ),
+      ),
     ),
   );
 

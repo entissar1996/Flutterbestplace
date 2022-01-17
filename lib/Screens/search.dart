@@ -1,10 +1,16 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutterbestplace/Screens/Profil_User/body.dart';
+import 'package:flutterbestplace/Users/profile.dart';
 import 'package:flutterbestplace/models/user.dart';
 import 'package:flutterbestplace/Screens/home.dart';
 import 'package:flutterbestplace/components/progress.dart';
+
+import 'Profil_Place/body.dart';
+import 'Profil_User/profil_screen.dart';
 
 class Search extends StatefulWidget {
   @override
@@ -16,7 +22,7 @@ class _SearchState extends State<Search> {
 TextEditingController searchController = TextEditingController();
   handleSearch(String query) {
     Future<QuerySnapshot> users =
-        usersRef.where("fullname", isGreaterThanOrEqualTo: query).get();
+        usersRef.where("fullname", isEqualTo: query).get();
     setState(() {
       searchResultsFuture = users;
     });
@@ -113,16 +119,15 @@ class UserResult extends StatelessWidget {
       color:Theme.of(context).primaryColor.withOpacity(0.7),
       child: Column(children:<Widget>[
         GestureDetector(
-          onTap: ()=>print("Show profile"),//showProfile(context, profileId: user.id),
+          onTap: ()=>showProfile(context, profileId: user.id, Role:user.role),
           child:ListTile(
             leading: CircleAvatar(
               backgroundColor: Colors.grey,
-              backgroundImage: CachedNetworkImageProvider(user.photoUrl.toString()),
+              backgroundImage: user.photoUrl!=null ? CachedNetworkImageProvider(user.photoUrl):AssetImage("assets/images/profil_defaut.jpg"),
             ),
             title: Text(
-              user.displayName,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
+              user.fullname,style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),
             ),
-            subtitle: Text(user.fullname,style: TextStyle(color: Colors.white),),
           ),
         ),
         Divider(
@@ -130,6 +135,26 @@ class UserResult extends StatelessWidget {
           color: Colors.white54,
         ),
           ],),
+    );
+  }
+}
+showProfile(BuildContext context, { String profileId,String Role}) {
+  if(Role == "User"){
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => ProfilUser(
+        profileId: profileId,
+      ),
+    ),
+  );}else{
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfilPlace(
+          profileId: profileId,
+        ),
+      ),
     );
   }
 }

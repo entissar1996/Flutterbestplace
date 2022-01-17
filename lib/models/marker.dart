@@ -1,27 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Marker {
+class MarkerS {
   String id;
   double latitude;
   double longitude;
 
-  Marker({
+  MarkerS({
     this.id,
     this.latitude,
     this.longitude,
   });
 
-  factory Marker.fromDocument(DocumentSnapshot doc){
-    return Marker(id: doc['id'],latitude: doc['latitude'],longitude: doc['longitude']);
+  factory MarkerS.fromDocument(DocumentSnapshot doc){
+    return MarkerS(id: doc['id'],latitude: doc['latitude'],longitude: doc['longitude']);
   }
-  Marker.fromDocumentSnapshot({DocumentSnapshot documentSnapshot}) {
+  MarkerS.fromDocumentSnapshot({DocumentSnapshot documentSnapshot}) {
     id = documentSnapshot.id;
     latitude = documentSnapshot["latitude"];
     longitude = documentSnapshot["longitude"];
   }
 
-  factory Marker.fromJson(Map<String, dynamic> json) {
-    return Marker(
+  factory MarkerS.fromJson(Map<String, dynamic> json) {
+    return MarkerS(
       id: json['id'],
       latitude: json['latitude'],
       longitude: json['longitude'],

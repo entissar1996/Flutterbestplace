@@ -16,6 +16,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:geocoding/geocoding.dart';
 
+import '../constants.dart';
+
 
 class Upload extends StatefulWidget {
   final CUser currentUser;
@@ -41,6 +43,7 @@ TextEditingController locationController=TextEditingController();
   final picker = ImagePicker();
 
   getImage() async {
+    Navigator.pop(context);
     final pickedFile = await picker.getImage(
         source: ImageSource.camera, maxHeight: 675, maxWidth: 960);
 
@@ -88,7 +91,7 @@ TextEditingController locationController=TextEditingController();
 
   Container buildSplashScreen() {
     return Container(
-      color: Theme.of(context).accentColor.withOpacity(0.6),
+      color: kPrimaryLightColor.withOpacity(0.6),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -103,13 +106,13 @@ TextEditingController locationController=TextEditingController();
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: Text(
-                "upload images",
+                "Create new post",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 22.0,
                 ),
               ),
-              color: Colors.deepOrange,
+              color: kPrimaryColor,
               onPressed: () => selectImage(context),
             ),
           ),
@@ -228,7 +231,7 @@ TextEditingController locationController=TextEditingController();
             child: Text(
               "Post",
               style: TextStyle(
-                color: Colors.blueAccent,
+                color: kPrimaryColor,
                 fontWeight: FontWeight.bold,
                 fontSize: 20.0,
               ),
@@ -306,7 +309,7 @@ TextEditingController locationController=TextEditingController();
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(30.0),
               ),
-              color: Colors.blue,
+              color: kPrimaryColor,
               onPressed: getUserLocation,
               icon: Icon(
                 Icons.my_location,

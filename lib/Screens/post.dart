@@ -4,13 +4,16 @@ import 'package:animator/animator.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutterbestplace/Controllers/auth_service.dart';
 import 'package:flutterbestplace/models/user.dart';
 import 'package:flutterbestplace/Screens/comments.dart';
 import 'package:flutterbestplace/Screens/home.dart';
 import 'package:flutterbestplace/components/custom_image.dart';
 import 'package:flutterbestplace/components/progress.dart';
+import 'package:get/get.dart';
 
 class Post extends StatefulWidget {
+
   final String postId;
   final String ownerId;
   final String username;
@@ -82,7 +85,8 @@ class Post extends StatefulWidget {
 }
 
 class _PostState extends State<Post> {
-  final String currentUserId = currentUser.id;
+  AuthService controller = Get.put(AuthService());
+   String currentUserId ;
   final String postId;
   final String ownerId;
   final String username;
@@ -121,7 +125,7 @@ class _PostState extends State<Post> {
             Map<String, dynamic> data = snapshot.data.data() as Map<
                 String,
                 dynamic>;
-            bool isPostOwner = currentUserId == ownerId;
+            bool isPostOwner = controller.idController == ownerId;
             return ListTile(
               leading: CircleAvatar(
                 backgroundImage: CachedNetworkImageProvider(data['photoUrl']),
@@ -141,10 +145,10 @@ class _PostState extends State<Post> {
               subtitle: Text(location),
               trailing: isPostOwner
                   ? IconButton(
-                onPressed: () => print("delete post"),
+                onPressed: () => handleDeletePost(context),
                 icon: Icon(Icons.more_vert),
               )
-                  : Text('nnnn'),
+                  : Text(''),
             );
           }
           return Text("loading");
@@ -152,32 +156,93 @@ class _PostState extends State<Post> {
         },
     );
   }
+  handleDeletePost(BuildContext parentContext) {
+    return showDialog(
+        context: parentContext,
+        builder: (context) {
+          return SimpleDialog(
+            title: Text("Remove this post?"),
+            children: <Widget>[
+              SimpleDialogOption(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    deletePost();
+                  },
+                  child: Text(
+                    'Delete',
+                    style: TextStyle(color: Colors.red),
+                  )),
+              SimpleDialogOption(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel')),
+            ],
+          );
+        });
+  }
+
+  // Note: To delete post, ownerId and currentUserId must be equal, so they can be used interchangeably
+  deletePost() async {
+    // delete post itself
+    postsRef
+        .doc(ownerId)
+        .collection('userPosts')
+        .doc(postId)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+    // delete uploaded image for thep ost
+    storageRef.child("post_$postId.jpg").delete();
+    // then delete all activity feed notifications
+    QuerySnapshot activityFeedSnapshot = await activityFeedRef
+        .doc(ownerId)
+        .collection("feedItems")
+        .where('postId', isEqualTo: postId)
+        .get();
+    activityFeedSnapshot.docs.forEach((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+    // then delete all comments
+    QuerySnapshot commentsSnapshot = await commentsRef
+        .doc(postId)
+        .collection('comments')
+        .get();
+    commentsSnapshot.docs.forEach((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+  }
   handleLikePost() {
-    bool _isLiked = likes[currentUserId] == true;
+    bool _isLiked = likes[controller.idController] == true;
 
     if (_isLiked) {
       postsRef
           .doc(ownerId)
           .collection('userPosts')
           .doc(postId)
-          .update({'likes.$currentUserId': false});
+          .update({'likes.${controller.idController}': false});
       removeLikeFromActivityFeed();
       setState(() {
         likeCount -= 1;
         isLiked = false;
-        likes[currentUserId] = false;
+        likes[controller.idController] = false;
       });
     } else if (!_isLiked) {
       postsRef
           .doc(ownerId)
           .collection('userPosts')
           .doc(postId)
-          .update({'likes.$currentUserId': true});
+          .update({'likes.${controller.idController}': true});
       addLikeToActivityFeed();
       setState(() {
         likeCount += 1;
         isLiked = true;
-        likes[currentUserId] = true;
+        likes[controller.idController] = true;
         showHeart = true;
       });
       Timer(Duration(milliseconds: 500), () {
@@ -189,7 +254,7 @@ class _PostState extends State<Post> {
   }
   addLikeToActivityFeed() {
     // add a notification to the postOwner's activity feed only if comment made by OTHER user (to avoid getting notification for our own like)
-    bool isNotPostOwner = currentUserId != ownerId;
+    bool isNotPostOwner = controller.idController != ownerId;
     if (isNotPostOwner) {
       activityFeedRef
           .doc(ownerId)
@@ -208,7 +273,7 @@ class _PostState extends State<Post> {
   }
 
   removeLikeFromActivityFeed() {
-    bool isNotPostOwner = currentUserId != ownerId;
+    bool isNotPostOwner = controller.idController != ownerId;
     if (isNotPostOwner) {
       activityFeedRef
           .doc(ownerId)
@@ -302,7 +367,7 @@ class _PostState extends State<Post> {
   }
   @override
   Widget build(BuildContext context) {
-    isLiked = (likes[currentUserId] == true);
+    isLiked = (likes[controller.idController] == true);
 
     return Column(
       mainAxisSize: MainAxisSize.min,

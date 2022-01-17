@@ -56,7 +56,7 @@ class MapSampleState extends State<MapSample> {
     long = cp.longitude;
     _kGooglePlex = CameraPosition(
       target: LatLng(35.5049812224640, 11.043470115161800),
-      zoom: 15.4746,
+      zoom: 4,
     );
     setState(() {
       marker.add(Marker(
@@ -75,14 +75,14 @@ class MapSampleState extends State<MapSample> {
     // marker.remove(Marker(markerId: MarkerId("1")));
     marker.add(
         Marker(markerId: MarkerId("1"), position: LatLng(newlat, newlong)));
-    /* gmc.animateCamera(
+    gmc.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
           target: LatLng(newlat, newlong),
-          zoom: 15.4746,
+          zoom: 4,
         ),
       ),
-    );*/
+    );
     setState(() {});
   }
 

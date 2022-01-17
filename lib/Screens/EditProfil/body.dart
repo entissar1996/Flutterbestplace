@@ -23,6 +23,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../constants.dart';
 import '../Signup/components/body.dart';
 final Reference storageRef=FirebaseStorage.instance.ref();
 
@@ -152,9 +153,9 @@ final pickedFile = await picker.getImage(
   Scaffold buildUploadForm() {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white70,
+        backgroundColor: kPrimaryColor,
         leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.black),
+            icon: Icon(Icons.arrow_back, color: Colors.white),
             onPressed: clearImage),
         title: Text(
           "Caption Post",
@@ -199,7 +200,7 @@ final pickedFile = await picker.getImage(
           ListTile(
             leading: CircleAvatar(
               backgroundImage:
-              CachedNetworkImageProvider(_controller.userController.value.photoUrl),
+    _controller.userController.value.photoUrl==null? AssetImage("assets/images/profil_defaut.jpg"):CachedNetworkImageProvider(_controller.userController.value.photoUrl),
             ),
 
           ),
@@ -214,14 +215,13 @@ final pickedFile = await picker.getImage(
       child: SingleChildScrollView(
         child: Form(
           key: _formKey,
-
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Obx(
                     () => PhotoProfile(
-                  imagePath:
-                  _controller.userController.value.photoUrl,
+                  imagePath:_controller.userController.value.photoUrl==null ?"https://firebasestorage.googleapis.com/v0/b/bestplace-331512.appspot.com/o/profil_defaut.jpg?alt=media&token=c9ce20af-4910-43cd-b43a-760a5c4b4243":_controller.userController.value.photoUrl,
+
                   isEdit: true,
                   onClicked: () async {
                     getImagegallery();

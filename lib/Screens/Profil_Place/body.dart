@@ -1,5 +1,7 @@
 import 'dart:async';
-
+import 'package:flutterbestplace/components/appbar_widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutterbestplace/Controllers/rate_controller.dart';
 import 'package:flutterbestplace/Screens/post.dart';
 import 'package:flutterbestplace/components/progress.dart';
 import 'package:get/get.dart';
@@ -17,12 +19,19 @@ import '../../Controllers/auth_service.dart';
 import 'package:flutterbestplace/Controllers/user_controller.dart';
 import 'package:flutterbestplace/Controllers/maps_controller.dart';
 
-class ProfilePage extends StatefulWidget {
+import '../home.dart';
+
+class ProfilPlace extends StatefulWidget {
+  final String profileId;
+  ProfilPlace({ this.profileId});
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilPlace> {
+  final String currentUserId = currentUser?.id;
+
+  double rate;
   bool isLoading = false;
   bool _isOpen = false;
   String postOrientation = "grid";
@@ -36,18 +45,185 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isFollowing = false;
   int followerCount = 0;
   int followingCount = 0;
-  double zoomMaps = 15.0;
-  PanelController _panelController = PanelController();
+  double zoomMaps = 4;
+  RteController controllerRate = Get.put(RteController());
+  PanelController  _panelController = PanelController();
   AuthService _controller = Get.put(AuthService());
   MarkerController controllerMarker = MarkerController();
 
+
+  checkIfFollowing() async {
+    DocumentSnapshot doc = await followersRef
+        .doc(widget.profileId)
+        .collection('userFollowers')
+        .doc(currentUserId)
+        .get();
+    setState(() {
+      isFollowing = doc.exists;
+    });
+  }
+
+  getFollowers() async {
+    QuerySnapshot snapshot = await followersRef
+        .doc(widget.profileId)
+        .collection('userFollowers')
+        .get();
+    setState(() {
+      followerCount = snapshot.docs.length;
+    });
+  }
+
+  getFollowing() async {
+    QuerySnapshot snapshot = await followingRef
+        .doc(widget.profileId)
+        .collection('userFollowing')
+        .get();
+    setState(() {
+      followingCount = snapshot.docs.length;
+    });
+  }
+
+  Container buildButton({String text, Function function}) {
+    return Container(
+      padding: EdgeInsets.only(top: 2.0),
+      child: FlatButton(
+        onPressed: function,
+        child: Container(
+          width: 250.0,
+          height: 27.0,
+          child: Text(
+            text,
+            style: TextStyle(
+              color: isFollowing ? Colors.black : Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isFollowing ? Colors.white : Colors.blue,
+            border: Border.all(
+              color: isFollowing ? Colors.grey : Colors.blue,
+            ),
+            borderRadius: BorderRadius.circular(5.0),
+          ),
+        ),
+      ),
+    );
+  }
+
+  buildProfileButton() {
+    // viewing your own profile - should show edit profile button
+    bool isProfileOwner = currentUserId == _controller.idController;
+    if (isProfileOwner) {
+      return buildButton(
+        text: "Edit Profile",
+      );
+    } else if (isFollowing) {
+      return buildButton(
+        text: "Unfollow",
+        function: handleUnfollowUser,
+      );
+    } else if (!isFollowing) {
+      return buildButton(
+        text: "Follow",
+        function: handleFollowUser,
+      );
+    }
+  }
+
+  handleUnfollowUser() {
+    setState(() {
+      isFollowing = false;
+    });
+    // remove follower
+    followersRef
+        .doc(widget.profileId)
+        .collection('userFollowers')
+        .doc(currentUserId)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+    // remove following
+    followingRef
+        .doc(currentUserId)
+        .collection('userFollowing')
+        .doc(widget.profileId)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+    // delete activity feed item for them
+    activityFeedRef
+        .doc(widget.profileId)
+        .collection('feedItems')
+        .doc(currentUserId)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+  }
+
+  handleFollowUser() {
+    setState(() {
+      isFollowing = true;
+    });
+    // Make auth user follower of THAT user (update THEIR followers collection)
+    followersRef
+        .doc(widget.profileId)
+        .collection('userFollowers')
+        .doc(currentUserId)
+        .set({});
+    // Put THAT user on YOUR following collection (update your following collection)
+    followingRef
+        .doc(currentUserId)
+        .collection('userFollowing')
+        .doc(widget.profileId)
+        .set({});
+    // add activity feed item for that user to notify about new follower (us)
+    activityFeedRef
+        .doc(widget.profileId)
+        .collection('feedItems')
+        .doc(currentUserId)
+        .set({
+      "type": "follow",
+      "ownerId": widget.profileId,
+      "username": currentUser.fullname,
+      "userId": currentUserId,
+      "userProfileImg": currentUser.photoUrl,
+      "timestamp": timestamp,
+    });
+  }
+
+
+  getProfilePosts() async {
+    setState(() {
+      isLoading = true;
+    });
+    QuerySnapshot snapshot = await postsRef
+        .doc(widget.profileId)
+        .collection('userPosts')
+        .orderBy('timestamp', descending: true)
+        .get();
+    setState(() {
+      isLoading = false;
+      postCount = snapshot.docs.length;
+      posts = snapshot.docs.map((doc) => Post.fromDocument(doc)).toList();
+    });
+  }
   Future<Position> getMarker() async {
 
-
+/*
     var markerData= await controllerMarker.MarkerById(_controller.idController);
     print("***************Map Marker**************");
-    var latitude = markerData.latitude;
-    var longitude = markerData.longitude;
+    //var latitude = markerData.latitude;
+    //var longitude = markerData.longitude;
     print(latitude);
     print(longitude);
     _kGooglePlex = CameraPosition(
@@ -56,38 +232,50 @@ class _ProfilePageState extends State<ProfilePage> {
     );
     var add = markers.add(
         Marker(markerId: MarkerId(markerData.id), position: LatLng(latitude, longitude)));
-    setState(() {});
+    setState(() {});*/
   }
 
   @override
   void initState() {
-   // controllerMarker.MarkerAll();
     super.initState();
+    getProfilePosts();
+    getFollowers();
+    getFollowing();
+    checkIfFollowing();
     getMarker();
+    controllerRate.RateById(_controller.idController);
+    controllerRate.CalculRating();
 
   }
 
   @override
   Widget build(BuildContext context) {
+    return FutureBuilder(
+        future: usersRef.doc(widget.profileId).get(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return circularProgress();
+          }
+          CUser user = CUser.fromDocument(snapshot.data);
     return Scaffold(
+      appBar: buildAppBar(context),
       body: Stack(
         fit: StackFit.expand,
         children: <Widget>[
-          Obx(
-            () => FractionallySizedBox(
+          FractionallySizedBox(
               alignment: Alignment.topCenter,
               heightFactor: 0.7,
               child: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image:  _controller.userController.value.photoUrl==null ? AssetImage("assets/images/profil_defaut.jpg"):NetworkImage(_controller.userController.value.photoUrl),
+                    image:  user.photoUrl==null ? AssetImage("assets/images/profil_defaut.jpg"):NetworkImage(user.photoUrl),
 
                     fit: BoxFit.cover,
                   ),
                 ),
               ),
             ),
-          ),
+
           FractionallySizedBox(
             alignment: Alignment.bottomCenter,
             heightFactor: 0.3,
@@ -129,6 +317,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ],
       ),
     );
+        });
   }
 
   /// WIDGETS
@@ -158,22 +347,68 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ]);
 
-  Widget buildRating() => RatingBar.builder(
-        initialRating: 3,
-        minRating: 1,
-        direction: Axis.horizontal,
-        allowHalfRating: true,
-        itemCount: 5,
-        itemPadding: EdgeInsets.symmetric(horizontal: 2.0),
-        itemBuilder: (context, _) => Icon(
-          Icons.star,
-          color: Colors.amber,
-        ),
-        onRatingUpdate: (rating) {
-          print(rating);
-        },
-      );
+  Widget buildRating(double Rating) {
+    return RatingBar.builder(
+      initialRating: Rating,
+      minRating: 1,
+      direction: Axis.horizontal,
+      allowHalfRating: true,
+      glow: true,
+      itemCount: 5,
+      itemPadding: EdgeInsets.symmetric(horizontal: 2.0),
+      itemBuilder: (context, _) => Icon(
+        Icons.star,
+        color: Colors.amber,
+      ),
+      onRatingUpdate: (rating) {
+        setState(() {
+          rate = rating;
+          print(rate);
+        });
+        /*setState(() {
+         _rating.add(rating);
+        print("_rating : $_rating");
+        });*/
+      },
+      updateOnDrag: false,
+    );
+  }
 
+  _showMyDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Rate This Places'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Please leave a star rating.'),
+                buildRating(1.0),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('rating'),
+              onPressed: () {
+                print("///////////////////////////");
+                print(rate);
+                controllerRate.SaveRate(_controller.idController,rate,"Lj0XWGnYdHeORXB4MBvkWDIqnVO2");
+                //controllerRate.addRate(rate, _controller.idController);
+                // print("liste rates  cout : ${controllerRate.Rates.value.length}");
+                setState(() {
+                  controllerRate.CalculRating();
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
   /// Panel Body
   SingleChildScrollView _panelBody(ScrollController controller) {
     double hPadding = 40;
@@ -194,7 +429,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   () => _titleSection(_controller.userController.value),
                 ),
 
-                Center(child: buildRating()),
+
+                MaterialButton(
+                    onPressed: () {
+                      print("okkkkkkkkkkkkkkkkkkkkkkkkkkkkk");
+                      _showMyDialog();
+                    },
+                    child: Center(
+                        child: buildRating(controllerRate.Rating.value))),
     /* Obx(
                   () => NumbersWidget(
                     Following: _controller.userController.value.following,
@@ -417,7 +659,7 @@ buildProfilePosts() {
           height: 8,
         ),
         Text(
-          user.phone,
+          user.phone==null?"":user.phone,
           style: TextStyle(color: Colors.grey),
         ),
       ],

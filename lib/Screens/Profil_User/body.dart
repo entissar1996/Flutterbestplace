@@ -4,6 +4,7 @@ import 'package:flutterbestplace/Screens/home.dart';
 import 'package:flutterbestplace/Screens/post.dart';
 import 'package:flutterbestplace/Screens/post_screen.dart';
 import 'package:flutterbestplace/components/progress.dart';
+import 'package:flutterbestplace/components/appbar_widget.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterbestplace/constants.dart';
@@ -19,13 +20,16 @@ import 'package:flutterbestplace/models/user.dart';
 import '../../Controllers/auth_service.dart';
 import 'package:flutterbestplace/Controllers/user_controller.dart';
 
-class Body extends StatefulWidget {
+import '../../components/rounded_button.dart';
+
+class ProfilUser extends StatefulWidget {
+  final String profileId;
+  ProfilUser({ this.profileId});
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<Body> {
-  final String currentUserId = currentUser?.id;
+class _ProfilePageState extends State<ProfilUser> {
   String postOrientation = "grid";
   PanelController _panelController = PanelController();
 
@@ -38,10 +42,13 @@ class _ProfilePageState extends State<Body> {
   bool isFollowing = false;
   int followerCount = 0;
   int followingCount = 0;
+  final String currentUserId = currentUser?.id;
+  CUser userprofile;
+
 
   checkIfFollowing() async {
     DocumentSnapshot doc = await followersRef
-        .doc(_controller.idController)
+        .doc(widget.profileId)
         .collection('userFollowers')
         .doc(currentUserId)
         .get();
@@ -52,7 +59,7 @@ class _ProfilePageState extends State<Body> {
 
   getFollowers() async {
     QuerySnapshot snapshot = await followersRef
-        .doc(_controller.idController)
+        .doc(widget.profileId)
         .collection('userFollowers')
         .get();
     setState(() {
@@ -62,7 +69,7 @@ class _ProfilePageState extends State<Body> {
 
   getFollowing() async {
     QuerySnapshot snapshot = await followingRef
-        .doc(_controller.idController)
+        .doc(widget.profileId)
         .collection('userFollowing')
         .get();
     setState(() {
@@ -100,7 +107,7 @@ class _ProfilePageState extends State<Body> {
 
   buildProfileButton() {
     // viewing your own profile - should show edit profile button
-    bool isProfileOwner = currentUserId == _controller.idController;
+    bool isProfileOwner = currentUserId == widget.profileId;
     if (isProfileOwner) {
       return buildButton(
         text: "Edit Profile",
@@ -125,7 +132,7 @@ class _ProfilePageState extends State<Body> {
     });
     // remove follower
     followersRef
-        .doc(_controller.idController)
+        .doc(widget.profileId)
         .collection('userFollowers')
         .doc(currentUserId)
         .get()
@@ -138,7 +145,7 @@ class _ProfilePageState extends State<Body> {
     followingRef
         .doc(currentUserId)
         .collection('userFollowing')
-        .doc(_controller.idController)
+        .doc(widget.profileId)
         .get()
         .then((doc) {
       if (doc.exists) {
@@ -147,7 +154,7 @@ class _ProfilePageState extends State<Body> {
     });
     // delete activity feed item for them
     activityFeedRef
-        .doc(_controller.idController)
+        .doc(widget.profileId)
         .collection('feedItems')
         .doc(currentUserId)
         .get()
@@ -164,7 +171,7 @@ class _ProfilePageState extends State<Body> {
     });
     // Make auth user follower of THAT user (update THEIR followers collection)
     followersRef
-        .doc(_controller.idController)
+        .doc(widget.profileId)
         .collection('userFollowers')
         .doc(currentUserId)
         .set({});
@@ -172,11 +179,11 @@ class _ProfilePageState extends State<Body> {
     followingRef
         .doc(currentUserId)
         .collection('userFollowing')
-        .doc(_controller.idController)
+        .doc(widget.profileId)
         .set({});
     // add activity feed item for that user to notify about new follower (us)
     activityFeedRef
-        .doc(_controller.idController)
+        .doc(widget.profileId)
         .collection('feedItems')
         .doc(currentUserId)
         .set({
@@ -188,7 +195,10 @@ class _ProfilePageState extends State<Body> {
       "timestamp": timestamp,
     });
   }
-
+  getUser()async{
+    userprofile =await _controller.getUserById(widget.profileId);
+    print(userprofile.toJson());
+  }
   @override
   void initState() {
     super.initState();
@@ -196,6 +206,7 @@ class _ProfilePageState extends State<Body> {
     getFollowers();
     getFollowing();
     checkIfFollowing();
+    getUser();
   }
 
   getProfilePosts() async {
@@ -203,7 +214,7 @@ class _ProfilePageState extends State<Body> {
       isLoading = true;
     });
     QuerySnapshot snapshot = await postsRef
-        .doc(_controller.idController)
+        .doc(widget.profileId)
         .collection('userPosts')
         .orderBy('timestamp', descending: true)
         .get();
@@ -249,36 +260,35 @@ class _ProfilePageState extends State<Body> {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     double height = MediaQuery.of(context).size.height;
-
+    return FutureBuilder(
+        future: usersRef.doc(widget.profileId).get(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return circularProgress();
+          }
+          CUser user = CUser.fromDocument(snapshot.data);
     return Scaffold(
+      appBar: buildAppBar(context),
       body: Stack(
         fit: StackFit.expand,
         children: <Widget>[
           ListView(
             physics: BouncingScrollPhysics(),
             children: [
-              Obx(
-                () => PhotoProfile(
-                  imagePath: _controller.userController.value.photoUrl,
-                  onClicked: () async {
-                   await Get.toNamed('/editprofil');
-                  },
-                ),
-              ),
-              ConstrainedBox(
-                constraints: BoxConstraints.tightFor(width: 70, height: 70),
-                child: ElevatedButton(
-                  child: Text('edit', style: TextStyle(fontSize: 24),),
-                  onPressed: () {Get.toNamed('/editprofil');},
-                  style: ElevatedButton.styleFrom(
-                    shape: CircleBorder(),
-                  ),
-                ),
-              ),
               const SizedBox(height: 24),
-              Obx(
-                () => buildName(_controller.userController.value),
-              ),
+              PhotoProfile(
+                      imagePath: user.photoUrl == null
+                          ? "https://firebasestorage.googleapis.com/v0/b/bestplace-331512.appspot.com/o/profil_defaut.jpg?alt=media&token=c9ce20af-4910-43cd-b43a-760a5c4b4243"
+                          : user.photoUrl,
+                      /*onClicked: () {
+                    print("tef bye");
+                    Get.toNamed('/editprofil');
+                  },*/
+                ),
+              const SizedBox(height: 24),
+
+               buildName(user),
+
               const SizedBox(height: 24),
               Row(
                 mainAxisSize: MainAxisSize.max,
@@ -325,6 +335,7 @@ class _ProfilePageState extends State<Body> {
         ],
       ),
     );
+        });
   }
 
   Widget buildName(CUser user) => Column(
@@ -482,6 +493,23 @@ class _ProfilePageState extends State<Body> {
           child: child,
         ),
       );
-
+  Widget buildEditIcon(Color color) => buildCircle(
+    color: Colors.white,
+    all: 3,
+    child: buildCircle(
+      color: color,
+      all: 3,
+      child: IconButton(
+        onPressed: () {
+          Get.toNamed('/editprofil');
+        },
+        icon: Icon(
+          Icons.edit,
+          color: Colors.white,
+          size: 20,
+        ),
+      ),
+    ),
+  );
 
 }

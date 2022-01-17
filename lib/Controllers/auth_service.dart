@@ -66,6 +66,13 @@ class AuthService extends GetxController {
       }
     }
   }
+  Future<CUser> getUserById(String id) async {
+    if(id!=idController){
+      return await DBService().getUser(id);
+    }else{
+      return userController.value;
+    }
+  }
 
   Future<void> linkGoogleAndTwitter() async {
     // Trigger the Google Authentication flow.
@@ -90,12 +97,14 @@ class AuthService extends GetxController {
         photoUrl: googleUserCredential.user.photoURL,
       );
       await DBService().createNewUser(_user);
-
+      Get.toNamed('/updaterole');
     }
+
     userController.value = await DBService().getUser(googleUserCredential.user.uid);
     idController = googleUserCredential.user.uid;
     isgoogleGmail = true;
     print(isgoogleGmail);
+    Get.toNamed('/home');
 
   }
 
@@ -158,11 +167,12 @@ class AuthService extends GetxController {
       userController.value = await DBService().getUser(id);
 
   }
-  Future<void> createPlace(String id,String phone,String adresse) async {
+  Future<void> createPlace(String id,String phone,String adresse,String category) async {
 
     usersRef.doc(id).update({
       'phone': phone,
       'adresse': adresse,
+      'category': category,
     }).then((value) => "SUCCESS")
         .catchError((error) => print("Failed to update user: $error"));
 
