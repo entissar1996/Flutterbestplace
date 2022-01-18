@@ -1,7 +1,12 @@
+import 'dart:core';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterbestplace/Controllers/auth_service.dart';
+import 'package:flutterbestplace/constants.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 import '../Controllers/db_service.dart';
 import '../Screens/home.dart';
@@ -17,9 +22,13 @@ class ChatPage extends StatelessWidget {
 
    @override
   Widget build(BuildContext context) {
-    return Scaffold(
+     DateTime currentPhoneDate = DateTime.now(); //DateTime
+
+     Timestamp myTimeStamp = Timestamp.fromDate(currentPhoneDate);
+     return Scaffold(
       appBar: AppBar(
         title: Text(user.fullname),
+        backgroundColor: kPrimaryColor,
         centerTitle: true,
       ),
       body: Padding(
@@ -46,8 +55,12 @@ class ChatPage extends StatelessWidget {
                                 itemCount: messages.length,
                                 itemBuilder: (context, index) {
                                   final msg = messages[index];
-                                  return MessageComponent(
-                                    msg: msg,
+
+                                  return Container(
+                                    margin: EdgeInsets.only(bottom:10),
+                                    child: MessageComponent(
+                                      msg: msg,
+                                    ),
                                   );
                                 },
                               );
@@ -72,21 +85,17 @@ class ChatPage extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: () async{
-                   /* Map<String, dynamic> map ={"content":msgController.text,"senderUid":_controller.user.id, "receiverUid":user.id,
-                      "createAt":Timestamp.now()};
-                    Message msg=Message.fromJson( map, _controller.idController);
-                    print("????????????????????????????????????????????????????????????????????????????????????????????????????????????");
-                    print(msg.toJson());*/
-                    print("ffffffffffffffffffffffffffff$msgController");
                       var msg = Message(
                       content:msgController.text,
                       senderUid:_controller.user.id,
                       receiverUid:user.id,
-                        createAt:timestamp,
+                        createAt:,//DateFormat("hh:mm:ss a").format(DateTime.now())"${DateTime.now().hour}:${DateTime.now().minute} ${DateTime.now().day}",
                     );
-                      print("????????????? $timestamp");
+                      msgController.clear();
+                   //   print("????????????? $timeago)}");
                     await DBService().sendMessage(msg);
                   },
+
                   icon: Icon(Icons.send),
                 ),
               ],

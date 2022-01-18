@@ -24,17 +24,33 @@ class Timeline extends StatefulWidget {
 
 class _TimelineState extends State<Timeline> {
   List<Post> posts;
+  bool isLoading = false;
+  int postCount = 0;
 
   @override
   void initState() {
     super.initState();
     getTimeline();
   }
-
-  getTimeline() async {
-    QuerySnapshot snapshot = await timelineRef
+  getProfilePosts() async {
+    setState(() {
+      isLoading = true;
+    });
+    QuerySnapshot snapshot = await postsRef
         .doc(widget.currentUser.id)
-        .collection('timelinePosts')
+        .collection('userPosts')
+        .orderBy('timestamp', descending: true)
+        .get();
+    setState(() {
+      isLoading = false;
+      postCount = snapshot.docs.length;
+      posts = snapshot.docs.map((doc) => Post.fromDocument(doc)).toList();
+    });
+  }
+  getTimeline() async {
+    QuerySnapshot snapshot = await postsRef
+        .doc(widget.currentUser.id)
+        .collection('userPosts')
         .orderBy('timestamp', descending: true)
         .get();
     List<Post> posts =

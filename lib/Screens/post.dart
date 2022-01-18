@@ -128,7 +128,7 @@ class _PostState extends State<Post> {
             bool isPostOwner = controller.idController == ownerId;
             return ListTile(
               leading: CircleAvatar(
-                backgroundImage: CachedNetworkImageProvider(data['photoUrl']),
+                backgroundImage: CachedNetworkImageProvider(data['photoUrl']==null ?"https://firebasestorage.googleapis.com/v0/b/bestplace-331512.appspot.com/o/profil_defaut.jpg?alt=media&token=c9ce20af-4910-43cd-b43a-760a5c4b4243":data['photoUrl']),
                 backgroundColor: Colors.grey,
               ),
               title: GestureDetector(
@@ -262,9 +262,9 @@ class _PostState extends State<Post> {
           .doc(postId)
           .set({
         "type": "like",
-        "username": currentUser.fullname,
-        "userId": currentUser.id,
-        "userProfileImg": currentUser.photoUrl,
+        "username": controller.userController.value.fullname,
+        "userId":controller.idController,
+        "userProfileImg": controller.userController.value.photoUrl,
         "postId": postId,
         "mediaUrl": mediaUrl,
         "timestamp": timestamp,

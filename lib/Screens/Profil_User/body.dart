@@ -50,7 +50,7 @@ class _ProfilePageState extends State<ProfilUser> {
     DocumentSnapshot doc = await followersRef
         .doc(widget.profileId)
         .collection('userFollowers')
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .get();
     setState(() {
       isFollowing = doc.exists;
@@ -94,9 +94,9 @@ class _ProfilePageState extends State<ProfilUser> {
           ),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isFollowing ? Colors.white : Colors.blue,
+            color: isFollowing ? Colors.white : kPrimaryColor,
             border: Border.all(
-              color: isFollowing ? Colors.grey : Colors.blue,
+              color: isFollowing ? Colors.grey : kPrimaryColor,
             ),
             borderRadius: BorderRadius.circular(5.0),
           ),
@@ -107,7 +107,7 @@ class _ProfilePageState extends State<ProfilUser> {
 
   buildProfileButton() {
     // viewing your own profile - should show edit profile button
-    bool isProfileOwner = currentUserId == widget.profileId;
+    bool isProfileOwner = _controller.idController == widget.profileId;
     if (isProfileOwner) {
       return buildButton(
         text: "Edit Profile",
@@ -134,7 +134,7 @@ class _ProfilePageState extends State<ProfilUser> {
     followersRef
         .doc(widget.profileId)
         .collection('userFollowers')
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .get()
         .then((doc) {
       if (doc.exists) {
@@ -143,7 +143,7 @@ class _ProfilePageState extends State<ProfilUser> {
     });
     // remove following
     followingRef
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .collection('userFollowing')
         .doc(widget.profileId)
         .get()
@@ -156,7 +156,7 @@ class _ProfilePageState extends State<ProfilUser> {
     activityFeedRef
         .doc(widget.profileId)
         .collection('feedItems')
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .get()
         .then((doc) {
       if (doc.exists) {
@@ -173,11 +173,11 @@ class _ProfilePageState extends State<ProfilUser> {
     followersRef
         .doc(widget.profileId)
         .collection('userFollowers')
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .set({});
     // Put THAT user on YOUR following collection (update your following collection)
     followingRef
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .collection('userFollowing')
         .doc(widget.profileId)
         .set({});
@@ -185,13 +185,13 @@ class _ProfilePageState extends State<ProfilUser> {
     activityFeedRef
         .doc(widget.profileId)
         .collection('feedItems')
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .set({
       "type": "follow",
       "ownerId": _controller.idController,
-      "username": currentUser.fullname,
-      "userId": currentUserId,
-      "userProfileImg": currentUser.photoUrl,
+      "username": _controller.userController.value.fullname,
+      "userId": _controller.idController,
+      "userProfileImg": _controller.userController.value.photoUrl,
       "timestamp": timestamp,
     });
   }
@@ -229,7 +229,7 @@ class _ProfilePageState extends State<ProfilUser> {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => EditProfil(currentUserId: currentUserId)));
+            builder: (context) => EditProfil(currentUserId:_controller.idController)));
   }
 
   Column buildCountColumn(String label, int count) {
@@ -297,6 +297,13 @@ class _ProfilePageState extends State<ProfilUser> {
                   buildCountColumn("posts", postCount),
                   buildCountColumn("followers", followerCount),
                   buildCountColumn("following", followingCount),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  buildProfileButton(),
                 ],
               ),
             ],

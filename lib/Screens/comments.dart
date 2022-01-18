@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutterbestplace/Controllers/auth_service.dart';
 import 'package:flutterbestplace/components/progress.dart';
+import 'package:get/get.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -25,6 +27,7 @@ class Comments extends StatefulWidget {
 }
 
 class CommentsState extends State<Comments> {
+  AuthService _controller = Get.put(AuthService());
   TextEditingController commentController = TextEditingController();
   final String postId;
   final String postOwnerId;
@@ -60,22 +63,22 @@ class CommentsState extends State<Comments> {
 
   addComment() {
     commentsRef.doc(postId).collection("comments").add({
-      "username": currentUser.fullname,
+      "username": _controller.userController.value.fullname,
       "comment": commentController.text,
       "timestamp": timestamp,
-      "avatarUrl": currentUser.photoUrl,
-      "userId": currentUser.id,
+      "avatarUrl": _controller.userController.value.photoUrl,
+      "userId": _controller.idController,
     });
-    bool isNotPostOwner = postOwnerId != currentUser.id;
+    bool isNotPostOwner = postOwnerId != _controller.idController;
     if (isNotPostOwner) {
       activityFeedRef.doc(postOwnerId).collection('feedItems').add({
         "type": "comment",
         "commentData": commentController.text,
         "timestamp": timestamp,
         "postId": postId,
-        "userId": currentUser.id,
-        "username": currentUser.fullname,
-        "userProfileImg": currentUser.photoUrl,
+        "userId": _controller.idController,
+        "username": _controller.userController.value.fullname,
+        "userProfileImg": _controller.userController.value.photoUrl,
         "mediaUrl": postMediaUrl,
       });
     }
@@ -137,11 +140,12 @@ class Comment extends StatelessWidget {
     return Column(
       children: <Widget>[
         ListTile(
-          title: Text(comment),
+          title: Text(username,style: TextStyle(fontSize: 15),),
+           trailing:Text(timeago.format(timestamp.toDate())),
           leading: CircleAvatar(
-            backgroundImage: CachedNetworkImageProvider(avatarUrl),
+            backgroundImage: CachedNetworkImageProvider(avatarUrl==null ?"https://firebasestorage.googleapis.com/v0/b/bestplace-331512.appspot.com/o/profil_defaut.jpg?alt=media&token=c9ce20af-4910-43cd-b43a-760a5c4b4243":avatarUrl),
           ),
-          subtitle: Text(timeago.format(timestamp.toDate())),
+          subtitle: Text(comment, style: TextStyle(fontWeight: FontWeight.bold,fontSize: 15),),
         ),
         Divider(),
       ],

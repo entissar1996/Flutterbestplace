@@ -39,10 +39,10 @@ class MyApp extends StatelessWidget {
         primaryColor: kPrimaryColor,
         scaffoldBackgroundColor: Colors.white,
       ),
-      home: WelcomeScreen(),/*StreamBuilder(
+      home:WelcomeScreen(),/* StreamBuilder(
         stream:AuthService().onChangedUser,
         builder: (context,snapshot){
-          return snapshot.data==null?WelcomeScreen():AccuielScreen();
+          return snapshot.data==null?WelcomeScreen():AllMarkers();
         },
 
       ),*/

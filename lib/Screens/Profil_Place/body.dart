@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutterbestplace/Screens/EditProfil/edit_profil.dart';
 import 'package:flutterbestplace/components/appbar_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutterbestplace/Controllers/rate_controller.dart';
@@ -7,8 +8,10 @@ import 'package:flutterbestplace/components/progress.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterbestplace/constants.dart';
+
 //google maps :
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 //geolocator :
 import 'package:geolocator/geolocator.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -23,13 +26,14 @@ import '../home.dart';
 
 class ProfilPlace extends StatefulWidget {
   final String profileId;
-  ProfilPlace({ this.profileId});
+
+  ProfilPlace({this.profileId});
+
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
 
 class _ProfilePageState extends State<ProfilPlace> {
-  final String currentUserId = currentUser?.id;
 
   double rate;
   bool isLoading = false;
@@ -47,16 +51,15 @@ class _ProfilePageState extends State<ProfilPlace> {
   int followingCount = 0;
   double zoomMaps = 4;
   RteController controllerRate = Get.put(RteController());
-  PanelController  _panelController = PanelController();
+  PanelController _panelController = PanelController();
   AuthService _controller = Get.put(AuthService());
   MarkerController controllerMarker = MarkerController();
-
 
   checkIfFollowing() async {
     DocumentSnapshot doc = await followersRef
         .doc(widget.profileId)
         .collection('userFollowers')
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .get();
     setState(() {
       isFollowing = doc.exists;
@@ -100,9 +103,9 @@ class _ProfilePageState extends State<ProfilPlace> {
           ),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: isFollowing ? Colors.white : Colors.blue,
+            color: isFollowing ? Colors.white : kPrimaryColor,
             border: Border.all(
-              color: isFollowing ? Colors.grey : Colors.blue,
+              color: isFollowing ? Colors.grey : kPrimaryColor,
             ),
             borderRadius: BorderRadius.circular(5.0),
           ),
@@ -110,13 +113,21 @@ class _ProfilePageState extends State<ProfilPlace> {
       ),
     );
   }
+  editProfile() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => EditProfil(currentUserId: _controller.idController)));
+  }
 
   buildProfileButton() {
     // viewing your own profile - should show edit profile button
-    bool isProfileOwner = currentUserId == _controller.idController;
+    bool isProfileOwner = _controller.idController == widget.profileId;
     if (isProfileOwner) {
       return buildButton(
         text: "Edit Profile",
+        function: editProfile,
+
       );
     } else if (isFollowing) {
       return buildButton(
@@ -139,7 +150,7 @@ class _ProfilePageState extends State<ProfilPlace> {
     followersRef
         .doc(widget.profileId)
         .collection('userFollowers')
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .get()
         .then((doc) {
       if (doc.exists) {
@@ -148,7 +159,7 @@ class _ProfilePageState extends State<ProfilPlace> {
     });
     // remove following
     followingRef
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .collection('userFollowing')
         .doc(widget.profileId)
         .get()
@@ -161,7 +172,7 @@ class _ProfilePageState extends State<ProfilPlace> {
     activityFeedRef
         .doc(widget.profileId)
         .collection('feedItems')
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .get()
         .then((doc) {
       if (doc.exists) {
@@ -178,11 +189,11 @@ class _ProfilePageState extends State<ProfilPlace> {
     followersRef
         .doc(widget.profileId)
         .collection('userFollowers')
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .set({});
     // Put THAT user on YOUR following collection (update your following collection)
     followingRef
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .collection('userFollowing')
         .doc(widget.profileId)
         .set({});
@@ -190,17 +201,16 @@ class _ProfilePageState extends State<ProfilPlace> {
     activityFeedRef
         .doc(widget.profileId)
         .collection('feedItems')
-        .doc(currentUserId)
+        .doc(_controller.idController)
         .set({
       "type": "follow",
       "ownerId": widget.profileId,
-      "username": currentUser.fullname,
-      "userId": currentUserId,
-      "userProfileImg": currentUser.photoUrl,
+      "username": _controller.userController.value.fullname,
+      "userId": _controller.idController,
+      "userProfileImg": _controller.userController.value.photoUrl,
       "timestamp": timestamp,
     });
   }
-
 
   getProfilePosts() async {
     setState(() {
@@ -217,8 +227,8 @@ class _ProfilePageState extends State<ProfilPlace> {
       posts = snapshot.docs.map((doc) => Post.fromDocument(doc)).toList();
     });
   }
-  Future<Position> getMarker() async {
 
+  Future<Position> getMarker() async {
 /*
     var markerData= await controllerMarker.MarkerById(_controller.idController);
     print("***************Map Marker**************");
@@ -236,16 +246,16 @@ class _ProfilePageState extends State<ProfilPlace> {
   }
 
   @override
-  void initState() {
+  void initState()  {
     super.initState();
     getProfilePosts();
     getFollowers();
     getFollowing();
     checkIfFollowing();
     getMarker();
+
     controllerRate.RateById(_controller.idController);
     controllerRate.CalculRating();
-
   }
 
   @override
@@ -257,66 +267,66 @@ class _ProfilePageState extends State<ProfilPlace> {
             return circularProgress();
           }
           CUser user = CUser.fromDocument(snapshot.data);
-    return Scaffold(
-      appBar: buildAppBar(context),
-      body: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          FractionallySizedBox(
-              alignment: Alignment.topCenter,
-              heightFactor: 0.7,
-              child: Container(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image:  user.photoUrl==null ? AssetImage("assets/images/profil_defaut.jpg"):NetworkImage(user.photoUrl),
-
-                    fit: BoxFit.cover,
+          return Scaffold(
+            appBar: buildAppBar(context),
+            body: Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                FractionallySizedBox(
+                  alignment: Alignment.topCenter,
+                  heightFactor: 0.7,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: user.photoUrl == null
+                            ? AssetImage("assets/images/profil_defaut.jpg")
+                            : NetworkImage(user.photoUrl),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                FractionallySizedBox(
+                  alignment: Alignment.bottomCenter,
+                  heightFactor: 0.3,
+                  child: Container(
+                    color: Colors.white,
+                  ),
+                ),
+                SlidingUpPanel(
+                  controller: _panelController,
+                  borderRadius: BorderRadius.only(
+                    topRight: Radius.circular(32),
+                    topLeft: Radius.circular(32),
+                  ),
+                  minHeight: MediaQuery.of(context).size.height * 0.35,
+                  maxHeight: MediaQuery.of(context).size.height * 0.85,
+                  body: GestureDetector(
+                    onTap: () => _panelController.close(),
+                    child: Container(
+                      color: Colors.transparent,
+                    ),
+                  ),
+                  panelBuilder: (ScrollController controller) =>
+                      _panelBody(controller),
+                  onPanelSlide: (value) {
+                    if (value >= 0.2) {
+                      if (!_isOpen) {
+                        setState(() {
+                          _isOpen = true;
+                        });
+                      }
+                    }
+                  },
+                  onPanelClosed: () {
+                    setState(() {
+                      _isOpen = false;
+                    });
+                  },
+                ),
+              ],
             ),
-
-          FractionallySizedBox(
-            alignment: Alignment.bottomCenter,
-            heightFactor: 0.3,
-            child: Container(
-              color: Colors.white,
-            ),
-          ),
-          SlidingUpPanel(
-            controller: _panelController,
-            borderRadius: BorderRadius.only(
-              topRight: Radius.circular(32),
-              topLeft: Radius.circular(32),
-            ),
-            minHeight: MediaQuery.of(context).size.height * 0.35,
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-            body: GestureDetector(
-              onTap: () => _panelController.close(),
-              child: Container(
-                color: Colors.transparent,
-              ),
-            ),
-            panelBuilder: (ScrollController controller) =>
-                _panelBody(controller),
-            onPanelSlide: (value) {
-              if (value >= 0.2) {
-                if (!_isOpen) {
-                  setState(() {
-                    _isOpen = true;
-                  });
-                }
-              }
-            },
-            onPanelClosed: () {
-              setState(() {
-                _isOpen = false;
-              });
-            },
-          ),
-        ],
-      ),
-    );
+          );
         });
   }
 
@@ -335,17 +345,32 @@ class _ProfilePageState extends State<ProfilPlace> {
         ),
       );
 
-  Widget buildName(CUser user) => Column(children: [
-        Text(
-          user.fullname,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          user.email,
-          style: TextStyle(color: Colors.grey),
-        ),
-      ]);
+  /*return FutureBuilder(
+  future: usersRef.doc(widget.profileId).get(),
+  builder: (context, snapshot) {
+  if (!snapshot.hasData) {
+  return circularProgress();
+  }
+  CUser user = CUser.fromDocument(snapshot.data);*/
+  Widget buildName() => FutureBuilder(
+      future: usersRef.doc(widget.profileId).get(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return circularProgress();
+        }
+        CUser user = CUser.fromDocument(snapshot.data);
+        return Column(children: [
+          Text(
+            user.fullname,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            user.adresse,
+            style: TextStyle(color: Colors.grey),
+          ),
+        ]);
+      });
 
   Widget buildRating(double Rating) {
     return RatingBar.builder(
@@ -395,7 +420,8 @@ class _ProfilePageState extends State<ProfilPlace> {
               onPressed: () {
                 print("///////////////////////////");
                 print(rate);
-                controllerRate.SaveRate(_controller.idController,rate,"Lj0XWGnYdHeORXB4MBvkWDIqnVO2");
+                controllerRate.SaveRate(_controller.idController, rate,
+                    widget.profileId);
                 //controllerRate.addRate(rate, _controller.idController);
                 // print("liste rates  cout : ${controllerRate.Rates.value.length}");
                 setState(() {
@@ -404,11 +430,37 @@ class _ProfilePageState extends State<ProfilPlace> {
                 Navigator.of(context).pop();
               },
             ),
+
           ],
         );
       },
     );
   }
+
+  Column buildCountColumn(String label, int count) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Text(
+          count.toString(),
+          style: TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
+        ),
+        Container(
+          margin: EdgeInsets.only(top: 4.0),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 15.0,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   /// Panel Body
   SingleChildScrollView _panelBody(ScrollController controller) {
     double hPadding = 40;
@@ -425,10 +477,10 @@ class _ProfilePageState extends State<ProfilPlace> {
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
-                Obx(
-                  () => _titleSection(_controller.userController.value),
-                ),
-
+                /*Obx(
+                  () => _titleSection(buildName()),
+                ),*/
+                buildName(),
 
                 MaterialButton(
                     onPressed: () {
@@ -437,15 +489,25 @@ class _ProfilePageState extends State<ProfilPlace> {
                     },
                     child: Center(
                         child: buildRating(controllerRate.Rating.value))),
-    /* Obx(
-                  () => NumbersWidget(
-                    Following: _controller.userController.value.following,
-                    Followers: _controller.userController.value.followers,
-                    Posts: _controller.imageList,
-                    idCurret: _controller.idController,
-                    iduser: "61b6821a8a3ffd0023dc6323",
-                  ),
-                ),*/
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    buildCountColumn("posts", postCount),
+                    buildCountColumn("followers", followerCount),
+                    buildCountColumn("following", followingCount),
+
+                  ],
+
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    buildProfileButton(),
+                  ],
+                ),
+
                 // _actionSection(hPadding: hPadding),
               ],
             ),
@@ -457,58 +519,57 @@ class _ProfilePageState extends State<ProfilPlace> {
     );
   }
 
-buildProfilePosts() {
-  if (isLoading) {
-    return circularProgress();
-  } else if (posts == null) {
-    return Container(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/nopost.jpg'),
-                fit: BoxFit.cover,
+  buildProfilePosts() {
+    if (isLoading) {
+      return circularProgress();
+    } else if (posts == null) {
+      return Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/nopost.jpg'),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 30.0),
-            child: Text(
-              "No Posts",
-              style: TextStyle(
-                color: Colors.pink[50],
-                fontSize: 30.0,
-                fontWeight: FontWeight.bold,
+            Padding(
+              padding: EdgeInsets.only(top: 30.0),
+              child: Text(
+                "No Posts",
+                style: TextStyle(
+                  color: Colors.pink[50],
+                  fontSize: 30.0,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  } else if (postOrientation == "grid") {
-    return GridView.builder(
-      primary: false,
-      shrinkWrap: true,
-      padding: EdgeInsets.zero,
-      itemCount: posts.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 1,
-        mainAxisSpacing: 1,
-      ),
-      itemBuilder: (BuildContext context, int index) =>
-          Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: NetworkImage(posts[index].mediaUrl),
-                fit: BoxFit.cover,
-              ),
+          ],
+        ),
+      );
+    } else if (postOrientation == "grid") {
+      return GridView.builder(
+        primary: false,
+        shrinkWrap: true,
+        padding: EdgeInsets.zero,
+        itemCount: posts.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 1,
+          mainAxisSpacing: 1,
+        ),
+        itemBuilder: (BuildContext context, int index) => Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: NetworkImage(posts[index].mediaUrl),
+              fit: BoxFit.cover,
             ),
           ),
-    );
-  } else if (postOrientation == "map") {
+        ),
+      );
+    } else if (postOrientation == "map") {
       return Column(
         children: [
           _kGooglePlex == null
@@ -530,7 +591,7 @@ buildProfilePosts() {
               style: TextStyle(color: Colors.white),
             ),
             onPressed: () async {
-              zoomMaps=zoomMaps+2;
+              zoomMaps = zoomMaps + 2;
             },
             style: ElevatedButton.styleFrom(
                 primary: kPrimaryColor,
@@ -659,7 +720,7 @@ buildProfilePosts() {
           height: 8,
         ),
         Text(
-          user.phone==null?"":user.phone,
+          user.phone == null ? "" : user.phone,
           style: TextStyle(color: Colors.grey),
         ),
       ],
@@ -685,4 +746,3 @@ buildProfilePosts() {
         ),
       );
 }
-

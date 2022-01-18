@@ -22,7 +22,7 @@ class _SearchState extends State<Search> {
 TextEditingController searchController = TextEditingController();
   handleSearch(String query) {
     Future<QuerySnapshot> users =
-        usersRef.where("fullname", isEqualTo: query).get();
+        usersRef.where("fullname", isGreaterThanOrEqualTo: query).get();
     setState(() {
       searchResultsFuture = users;
     });

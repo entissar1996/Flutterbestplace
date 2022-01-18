@@ -10,9 +10,9 @@ class Message {
   String content;
   String senderUid;
   String receiverUid;
-  Timestamp createAt;
+  String createAt;
 
-  Message({this.id, this.content, this.senderUid, this.receiverUid, createAt});
+  Message({this.id, this.content, this.senderUid, this.receiverUid, this.createAt});
 
   factory Message.fromJson(Map<String, dynamic> json) {
     return Message(

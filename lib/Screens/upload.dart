@@ -265,7 +265,7 @@ TextEditingController locationController=TextEditingController();
           ListTile(
             leading: CircleAvatar(
               backgroundImage:
-                  CachedNetworkImageProvider(widget.currentUser.photoUrl),
+                  CachedNetworkImageProvider(widget.currentUser.photoUrl==null ?"https://firebasestorage.googleapis.com/v0/b/bestplace-331512.appspot.com/o/profil_defaut.jpg?alt=media&token=c9ce20af-4910-43cd-b43a-760a5c4b4243":widget.currentUser.photoUrl),
             ),
             title: Container(
               width: 250.0,

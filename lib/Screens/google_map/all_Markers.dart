@@ -140,6 +140,8 @@ class getAllMarkersState extends State<AllMarkers> {
                     polylines: {
                       Polyline(polylineId: const PolylineId("over"), color: Colors.red,width: 5)
                     },
+                    scrollGesturesEnabled: true,
+
                   ),
                   height: 746,
                 ),
