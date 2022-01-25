@@ -76,12 +76,12 @@ class Body extends StatelessWidget {
       var Errormessage = await _controller.login(mail,psw);
     print("Erormessage $Errormessage");
     if (Errormessage== null){
-      /*if(_controller.userController.value.role=="PLACE"){
-        Get.toNamed('/profilPlace');}
+      if(_controller.userController.value.role!="Admin"){
+        Get.toNamed('/home');}
       else{
-        Get.toNamed('/profilUser');
-      }*/
-      Get.toNamed('/home');
+        Get.toNamed('/profilAdmin');
+      }
+     // Get.toNamed('/home');
     }else{
       AwesomeDialog(
           context: context,

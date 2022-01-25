@@ -3,6 +3,7 @@ import 'package:flutterbestplace/Screens/EditProfil/edit_profil.dart';
 import 'package:flutterbestplace/Screens/home.dart';
 import 'package:flutterbestplace/Screens/post.dart';
 import 'package:flutterbestplace/Screens/post_screen.dart';
+import 'package:flutterbestplace/Screens/post_tile.dart';
 import 'package:flutterbestplace/components/progress.dart';
 import 'package:flutterbestplace/components/appbar_widget.dart';
 import 'package:get/get.dart';
@@ -24,7 +25,9 @@ import '../../components/rounded_button.dart';
 
 class ProfilUser extends StatefulWidget {
   final String profileId;
-  ProfilUser({ this.profileId});
+
+  ProfilUser({this.profileId});
+
   @override
   _ProfilePageState createState() => _ProfilePageState();
 }
@@ -44,7 +47,6 @@ class _ProfilePageState extends State<ProfilUser> {
   int followingCount = 0;
   final String currentUserId = currentUser?.id;
   CUser userprofile;
-
 
   checkIfFollowing() async {
     DocumentSnapshot doc = await followersRef
@@ -103,6 +105,14 @@ class _ProfilePageState extends State<ProfilUser> {
         ),
       ),
     );
+  }
+
+  editProfile() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                EditProfil(currentUserId: _controller.idController)));
   }
 
   buildProfileButton() {
@@ -188,25 +198,12 @@ class _ProfilePageState extends State<ProfilUser> {
         .doc(_controller.idController)
         .set({
       "type": "follow",
-      "ownerId": _controller.idController,
+      "ownerId": widget.profileId,
       "username": _controller.userController.value.fullname,
       "userId": _controller.idController,
       "userProfileImg": _controller.userController.value.photoUrl,
       "timestamp": timestamp,
     });
-  }
-  getUser()async{
-    userprofile =await _controller.getUserById(widget.profileId);
-    print(userprofile.toJson());
-  }
-  @override
-  void initState() {
-    super.initState();
-    getProfilePosts();
-    getFollowers();
-    getFollowing();
-    checkIfFollowing();
-    getUser();
   }
 
   getProfilePosts() async {
@@ -225,11 +222,13 @@ class _ProfilePageState extends State<ProfilUser> {
     });
   }
 
-  editProfile() {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => EditProfil(currentUserId:_controller.idController)));
+  @override
+  void initState() {
+    super.initState();
+    getProfilePosts();
+    getFollowers();
+    getFollowing();
+    checkIfFollowing();
   }
 
   Column buildCountColumn(String label, int count) {
@@ -267,16 +266,16 @@ class _ProfilePageState extends State<ProfilUser> {
             return circularProgress();
           }
           CUser user = CUser.fromDocument(snapshot.data);
-    return Scaffold(
-      appBar: buildAppBar(context),
-      body: Stack(
-        fit: StackFit.expand,
-        children: <Widget>[
-          ListView(
-            physics: BouncingScrollPhysics(),
-            children: [
-              const SizedBox(height: 24),
-              PhotoProfile(
+          return Scaffold(
+            appBar: buildAppBar(context),
+            body: Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                ListView(
+                  // physics: BouncingScrollPhysics(),
+                  children: [
+                    const SizedBox(height: 24),
+                    PhotoProfile(
                       imagePath: user.photoUrl == null
                           ? "https://firebasestorage.googleapis.com/v0/b/bestplace-331512.appspot.com/o/profil_defaut.jpg?alt=media&token=c9ce20af-4910-43cd-b43a-760a5c4b4243"
                           : user.photoUrl,
@@ -284,64 +283,35 @@ class _ProfilePageState extends State<ProfilUser> {
                     print("tef bye");
                     Get.toNamed('/editprofil');
                   },*/
-                ),
-              const SizedBox(height: 24),
-
-               buildName(user),
-
-              const SizedBox(height: 24),
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  buildCountColumn("posts", postCount),
-                  buildCountColumn("followers", followerCount),
-                  buildCountColumn("following", followingCount),
-                ],
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: <Widget>[
-                  buildProfileButton(),
-                ],
-              ),
-            ],
-          ),
-          SlidingUpPanel(
-            controller: _panelController,
-            borderRadius: BorderRadius.only(
-              topRight: Radius.circular(32),
-              topLeft: Radius.circular(32),
+                    ),
+                    const SizedBox(height: 24),
+                    buildName(user),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        buildCountColumn("posts", postCount),
+                        buildCountColumn("followers", followerCount),
+                        buildCountColumn("following", followingCount),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        buildProfileButton(),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    IconTap(),
+                    buildProfilePosts(),
+                  ],
+                )
+              ],
             ),
-            minHeight: MediaQuery.of(context).size.height * 0.35,
-            maxHeight: MediaQuery.of(context).size.height * 0.85,
-            body: GestureDetector(
-              onTap: () => _panelController.close(),
-              child: Container(
-                color: Colors.transparent,
-              ),
-            ),
-            panelBuilder: (ScrollController controller) =>
-                _panelBody(controller),
-            onPanelSlide: (value) {
-              if (value >= 0.2) {
-                if (!_isOpen) {
-                  setState(() {
-                    _isOpen = true;
-                  });
-                }
-              }
-            },
-            onPanelClosed: () {
-              setState(() {
-                _isOpen = false;
-              });
-            },
-          ),
-        ],
-      ),
-    );
+          );
         });
   }
 
@@ -356,18 +326,7 @@ class _ProfilePageState extends State<ProfilUser> {
             user.email,
             style: TextStyle(color: Colors.grey),
           ),
-          /* Text(
-            user.phone,
-            style: TextStyle(color: Colors.grey),
-          ),
-          Text(
-            user.ville,
-            style: TextStyle(color: Colors.grey),
-          ),
-          Text(
-            user.adresse,
-            style: TextStyle(color: Colors.grey),
-          )*/
+
         ],
       );
 
@@ -435,24 +394,18 @@ class _ProfilePageState extends State<ProfilUser> {
         ),
       );
     } else if (postOrientation == "grid") {
-      return GridView.builder(
-        primary: false,
+      List<GridTile> gridTiles = [];
+      posts.forEach((post) {
+        gridTiles.add(GridTile(child: PostTile(post)));
+      });
+      return GridView.count(
+        crossAxisCount: 3,
+        childAspectRatio: 1.0,
+        mainAxisSpacing: 1.5,
+        crossAxisSpacing: 1.5,
         shrinkWrap: true,
-        padding: EdgeInsets.zero,
-        itemCount: posts.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 1,
-          mainAxisSpacing: 1,
-        ),
-        itemBuilder: (BuildContext context, int index) => Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage(posts[index].mediaUrl),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
+        physics: NeverScrollableScrollPhysics(),
+        children: gridTiles,
       );
     } else if (postOrientation == "list") {
       return Column(
@@ -487,36 +440,4 @@ class _ProfilePageState extends State<ProfilUser> {
           ],
         ),
       );
-
-  Widget buildCircle({
-    Widget child,
-    double all,
-    Color color,
-  }) =>
-      ClipOval(
-        child: Container(
-          padding: EdgeInsets.all(all),
-          color: color,
-          child: child,
-        ),
-      );
-  Widget buildEditIcon(Color color) => buildCircle(
-    color: Colors.white,
-    all: 3,
-    child: buildCircle(
-      color: color,
-      all: 3,
-      child: IconButton(
-        onPressed: () {
-          Get.toNamed('/editprofil');
-        },
-        icon: Icon(
-          Icons.edit,
-          color: Colors.white,
-          size: 20,
-        ),
-      ),
-    ),
-  );
-
 }

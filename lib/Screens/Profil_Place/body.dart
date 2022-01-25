@@ -23,6 +23,7 @@ import 'package:flutterbestplace/Controllers/user_controller.dart';
 import 'package:flutterbestplace/Controllers/maps_controller.dart';
 
 import '../home.dart';
+import '../post_tile.dart';
 
 class ProfilPlace extends StatefulWidget {
   final String profileId;
@@ -550,26 +551,20 @@ class _ProfilePageState extends State<ProfilPlace> {
         ),
       );
     } else if (postOrientation == "grid") {
-      return GridView.builder(
-        primary: false,
+      List<GridTile> gridTiles = [];
+      posts.forEach((post) {
+        gridTiles.add(GridTile(child: PostTile(post)));
+      });
+      return GridView.count(
+        crossAxisCount: 3,
+        childAspectRatio: 1.0,
+        mainAxisSpacing: 1.5,
+        crossAxisSpacing: 1.5,
         shrinkWrap: true,
-        padding: EdgeInsets.zero,
-        itemCount: posts.length,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 1,
-          mainAxisSpacing: 1,
-        ),
-        itemBuilder: (BuildContext context, int index) => Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: NetworkImage(posts[index].mediaUrl),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
+        physics: NeverScrollableScrollPhysics(),
+        children: gridTiles,
       );
-    } else if (postOrientation == "map") {
+    }else if (postOrientation == "map") {
       return Column(
         children: [
           _kGooglePlex == null

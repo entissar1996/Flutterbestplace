@@ -36,6 +36,7 @@ class _TimelineState extends State<Timeline> {
     setState(() {
       isLoading = true;
     });
+
     QuerySnapshot snapshot = await postsRef
         .doc(widget.currentUser.id)
         .collection('userPosts')
@@ -48,9 +49,7 @@ class _TimelineState extends State<Timeline> {
     });
   }
   getTimeline() async {
-    QuerySnapshot snapshot = await postsRef
-        .doc(widget.currentUser.id)
-        .collection('userPosts')
+    QuerySnapshot snapshot = await timelineRef
         .orderBy('timestamp', descending: true)
         .get();
     List<Post> posts =

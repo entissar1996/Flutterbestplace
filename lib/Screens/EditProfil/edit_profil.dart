@@ -146,8 +146,8 @@ class _EditProfilState extends State<EditProfil> {
     setState(() {
       isUploading = true;
     });
-    //await compressImage();
-    String mediaUrl = await uploadImage(await compressImage(_image));
+    //await compressImage(_image);
+    String mediaUrl = await uploadImage(_image);
     createPostInFireStore(
       mediaUrl: mediaUrl,
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutterbestplace/Controllers/auth_service.dart';
 import 'package:flutterbestplace/Screens/Welcome/welcome_screen.dart';
 import 'package:flutterbestplace/Screens/create_account.dart';
+import 'package:flutterbestplace/Users/adminprofile.dart';
 import 'package:flutterbestplace/constants.dart';
 import 'package:flutterbestplace/Screens/Signup/signup_screen.dart';
 import 'package:flutterbestplace/Screens/Signup/contactplace.dart';
@@ -58,6 +59,7 @@ class MyApp extends StatelessWidget {
         GetPage(name: '/getmaps', page: () => AllMarkers()),
         GetPage(name: '/updaterole', page: () => CreateAccount()),
         GetPage(name: '/chat', page: () => Listuserchat()),
+        GetPage(name: '//profilAdmin', page: () => Adminprofile()),
 
         GetPage(name: '/home', page: () => Home()),
 

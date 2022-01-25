@@ -31,9 +31,9 @@ class Listuserchat extends StatelessWidget {
                       final user = users[i];
                       return ListTile(
                         onTap: () {
-                          Navigator.push(
+                        Navigator.push(
                             context,
-                            MaterialPageRoute(
+                           MaterialPageRoute(
                                 builder: (context) => ChatPage(user: user)),
                           );
                           // NavigateToNextPage(context, ChatPage(user:user))
@@ -60,7 +60,6 @@ class Listuserchat extends StatelessWidget {
                           ),
                         ),
                         title: Text(user.fullname),
-                        subtitle: Text(user.email),
                       );
                     });
           } else {

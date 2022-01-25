@@ -76,7 +76,9 @@ class getAllMarkersState extends State<AllMarkers> {
           markerId: MarkerId("$i"),
           icon:
           BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet),
+          infoWindow: InfoWindow(title:marker.name, snippet: marker.address),
           position: LatLng(marker.latitude, marker.longitude)));
+
       print(markers);
       i++;
     });
@@ -134,6 +136,8 @@ class getAllMarkersState extends State<AllMarkers> {
                       print('t1 : ${t.longitude}');
                     },
                     initialCameraPosition: _kGooglePlex,
+                    zoomGesturesEnabled: true,
+                    zoomControlsEnabled: true,
                     onMapCreated: (controller) {
                       _controller.complete(controller);
                     },

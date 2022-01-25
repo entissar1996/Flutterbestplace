@@ -167,6 +167,12 @@ class _PostState extends State<Post> {
                   onPressed: () {
                     Navigator.pop(context);
                     deletePost();
+                   // Navigator.pop(context);
+                    const snackBar = SnackBar(
+                      content: Text('Post Deleted'),
+                    );
+     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+Get.back();
                   },
                   child: Text(
                     'Delete',
@@ -186,6 +192,14 @@ class _PostState extends State<Post> {
     postsRef
         .doc(ownerId)
         .collection('userPosts')
+        .doc(postId)
+        .get()
+        .then((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+    timelineRef
         .doc(postId)
         .get()
         .then((doc) {
@@ -216,6 +230,7 @@ class _PostState extends State<Post> {
         doc.reference.delete();
       }
     });
+
   }
   handleLikePost() {
     bool _isLiked = likes[controller.idController] == true;
@@ -236,6 +251,9 @@ class _PostState extends State<Post> {
       postsRef
           .doc(ownerId)
           .collection('userPosts')
+          .doc(postId)
+          .update({'likes.${controller.idController}': true});
+      timelineRef
           .doc(postId)
           .update({'likes.${controller.idController}': true});
       addLikeToActivityFeed();

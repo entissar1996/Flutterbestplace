@@ -187,6 +187,14 @@ TextEditingController locationController=TextEditingController();
   "timestamp":timestamp,
   "likes":{},
 });
+    timelineRef.doc(postId).set({"postId": postId,
+      "ownerId":userId,
+      "username":_controller.userController.value.fullname,
+      "mediaUrl": mediaUrl,
+      "description": description,
+      "location":location,
+      "timestamp":timestamp,
+      "likes":{},});
   }
 
   handleSubmit() async {
@@ -194,7 +202,7 @@ TextEditingController locationController=TextEditingController();
       isUploading = true;
     });
     //await compressImage();
-    String mediaUrl = await uploadImage(await compressImage(_image));
+    String mediaUrl = await uploadImage(_image);
     createPostInFireStore(
       mediaUrl:mediaUrl,
       location:locationController.text,

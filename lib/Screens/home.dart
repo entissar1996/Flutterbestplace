@@ -85,7 +85,7 @@ class _HomeState extends State<Home> {
         children: [
         /*  _controller.user.role==null ?
           CreateAccount():Timeline(currentUser: _controller.user),*/
-          ActivityFeed(),
+          Timeline(currentUser: _controller.user),
           AllMarkers(),
           Upload(currentUser:_controller.user),
           Search(),

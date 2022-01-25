@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutterbestplace/models/messages.dart';
 import 'package:flutterbestplace/models/user.dart';
 import 'package:get/get.dart';
 
 import '../Screens/home.dart';
-import '../models/message.dart';
 import 'auth_service.dart';
 
 class DBService {
@@ -41,23 +41,32 @@ class DBService {
 
   Stream<List<CUser>> get getDiscussionUser {
     return usersRef
-        .where('id', isNotEqualTo: _controller.idController)
+        .where('id',whereNotIn:  ["Rmcp0g0yjkaTaad6T9pw4hN9q0q2", _controller.idController] )
         .snapshots()
         .map((event) =>
             event.docs.map((e) => CUser.fromJson(e.data())).toList());
   }
+  Stream<List<CUser>> get getAllUser {
+    return usersRef
+        .where('id',whereNotIn:  ["Rmcp0g0yjkaTaad6T9pw4hN9q0q2", _controller.idController] )
+        .snapshots()
+        .map((event) =>
+        event.docs.map((e) => CUser.fromJson(e.data())).toList());
+  }
 
-  Stream<List<Message>> getMessage(String receiverUid,
+  Stream<List<Messages>> getMessage(String receiverUid,
       [bool myMessage = true]) {
+    print("***********Message**************");
     return MessageRef.where('senderUid',
             isEqualTo: myMessage ? _controller.idController : receiverUid)
         .where('receiverUid',
             isEqualTo: myMessage ? receiverUid : _controller.idController)
         .snapshots()
         .map((event) =>
-            event.docs.map((e) => Message.fromJson(e.data())).toList());
+            event.docs.map((e) => Messages.fromJson(e.data())).toList());
+
   }
-  Future<bool> sendMessage(Message msg) async {
+  Future<bool> sendMessage(Messages msg) async {
     try {
       await MessageRef.doc().set(msg.toJson());
       return true;
