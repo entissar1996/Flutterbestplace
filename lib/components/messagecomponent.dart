@@ -23,6 +23,8 @@ class MessageComponent extends StatelessWidget {
       children: [
         Stack(
           children: [
+
+        SizedBox(width: 5,),
             Container(
               padding: EdgeInsets.all(5),
               decoration: BoxDecoration(

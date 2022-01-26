@@ -21,13 +21,13 @@ class Body extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              "WELCOME TO BESTPLACE",
-              style: TextStyle(fontWeight: FontWeight.bold),
+              "Welcome to BestPlace",
+              style: TextStyle(fontWeight: FontWeight.bold,fontSize: 25,color:kPrimaryColor),
             ),
             SizedBox(height: size.height * 0.05),
-            SvgPicture.asset(
-              "assets/icons/chat.svg",
-              height: size.height * 0.45,
+            Image.asset(
+              "assets/images/logo.png",
+              height: size.height * 0.32,
             ),
             SizedBox(height: size.height * 0.05),
             RoundedButton(

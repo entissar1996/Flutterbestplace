@@ -84,6 +84,21 @@ class CommentsState extends State<Comments> {
     }
     commentController.clear();
   }
+  deleteComment() async {
+    // delete post itself
+
+    // then delete all comments
+    QuerySnapshot commentsSnapshot = await commentsRef
+        .doc(postId)
+        .collection('comments')
+        .get();
+    commentsSnapshot.docs.forEach((doc) {
+      if (doc.exists) {
+        doc.reference.delete();
+      }
+    });
+
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -12,6 +12,7 @@ import 'package:flutterbestplace/Screens/Profil_Place/profil_place.dart';
 import 'package:flutterbestplace/Screens/Welcome/welcome_screen.dart';
 import 'package:flutterbestplace/Screens/activity_feed.dart';
 import 'package:flutterbestplace/Screens/google_map/all_Markers.dart';
+import 'package:flutterbestplace/Users/profile.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutterbestplace/models/user.dart';
@@ -86,6 +87,7 @@ class _HomeState extends State<Home> {
         /*  _controller.user.role==null ?
           CreateAccount():Timeline(currentUser: _controller.user),*/
           Timeline(currentUser: _controller.user),
+         //Pro(currentUser: _controller.user),
           AllMarkers(),
           Upload(currentUser:_controller.user),
           Search(),
